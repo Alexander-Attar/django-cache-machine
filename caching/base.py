@@ -4,7 +4,7 @@ import logging
 from django.conf import settings
 from django.db import models
 from django.db.models import signals
-from django.db.models.sql import query
+from django.db.models.sql import EmptyResultSet, query
 from django.utils import encoding
 
 from .compat import DEFAULT_TIMEOUT, FOREVER
@@ -200,11 +200,14 @@ class CachingQuerySet(models.query.QuerySet):
 
     def count(self):
         super_count = super(CachingQuerySet, self).count
-        query_string = 'count:%s' % self.query_key()
-        if self.timeout == NO_CACHE or TIMEOUT == NO_CACHE:
+        try:
+            query_string = 'count:%s' % self.query_key()
+            if self.timeout == NO_CACHE or TIMEOUT == NO_CACHE:
+                return super_count()
+            else:
+                return cached_with(self, super_count, query_string, TIMEOUT)
+        except EmptyResultSet:
             return super_count()
-        else:
-            return cached_with(self, super_count, query_string, TIMEOUT)
 
     def cache(self, timeout=DEFAULT_TIMEOUT):
         qs = self._clone()
