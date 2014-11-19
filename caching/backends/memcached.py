@@ -15,9 +15,10 @@ class InfinityMixin(object):
             timeout = self.default_timeout
         return super(InfinityMixin, self).set(key, value, timeout, version)
 
-
-class CacheClass(InfinityMixin, memcached.CacheClass):
-    pass
+# The CacheClass has been removed from the memcached module
+# Commenting this out fixes this bombing out in Django 1.6
+# class CacheClass(InfinityMixin, memcached.CacheClass):
+#     pass
 
 if django.VERSION[:2] >= (1, 3):
 
